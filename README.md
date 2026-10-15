@@ -16,15 +16,22 @@ mechanically-checkable STE writing rules, and it doubles as a Claude Code skill 
 - `git` and `make` (on macOS: `xcode-select --install`).
 - macOS or Linux. Windows is not supported: `tool/bin/ste` is a bash wrapper and the
   Makefile assumes a POSIX shell (WSL should work but is untested).
-- [`uv`](https://docs.astral.sh/uv/) to create the virtualenv and install the package:
-  `curl -LsSf https://astral.sh/uv/install.sh | sh` (or `brew install uv`).
-- `pdftotext` from poppler, used once by `make dictionary` to read the PDF:
-  `brew install poppler` on macOS, `apt install poppler-utils` on Debian/Ubuntu.
+- [`uv`](https://docs.astral.sh/uv/) to create the virtualenv and install the package
+  (it also fetches Python 3.12 when needed).
+- `pdftotext` from poppler, used by `make dictionary` / `make download` to read the PDF.
 - Your own copy of the ASD-STE100 Issue 9 PDF from the official source. Either register
   through ASD's free
   [download form](https://www.asd-europe.org/standards-specifications/simplified-technical-english/download-asd-ste-100)
   (preferred: it tells ASD how STE is used), or run `make download`, which fetches it
   from the official ASD-STE100 website. Do not use copies from mirror sites.
+
+`make install`, `make setup`, `make dictionary` and `make download` first run
+`make deps`, which checks for `git`, `uv` and `pdftotext`. With Homebrew (macOS, or
+Linux with Homebrew) it installs the missing ones (`brew install uv poppler`). Without
+Homebrew it prints the commands for your system (for example
+`sudo apt-get install poppler-utils`) and stops: it never runs `sudo` or an install
+script for you. The Python packages and the spaCy model are installed into the
+project's own virtualenv by `make setup`.
 
 `make doctor` reports `uv` and `pdftotext` as booleans; they are informational only and
 do not affect its exit code (linting needs neither once the dictionary is built).

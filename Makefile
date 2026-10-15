@@ -7,21 +7,42 @@ DEST ?= $(HOME)/.claude/skills/ste-lint
 PDF_URL := https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf
 PDF_FILE := $(DATA)/asd-ste100-issue-9.pdf
 
-.PHONY: setup dictionary download test doctor install
+.PHONY: deps setup dictionary download test doctor install
 
-setup:
+# Check the system tools. Install the missing ones with Homebrew when it is
+# there; otherwise show the commands for this system.
+deps:
+	@missing=""; \
+	command -v git >/dev/null || missing="$$missing git"; \
+	command -v uv >/dev/null || missing="$$missing uv"; \
+	command -v pdftotext >/dev/null || missing="$$missing poppler"; \
+	if [ -z "$$missing" ]; then exit 0; fi; \
+	if command -v brew >/dev/null; then \
+	  echo "Installing with Homebrew:$$missing"; brew install $$missing; \
+	else \
+	  echo "Missing:$$missing. Install them, then run make again:"; \
+	  if [ "$$(uname -s)" = Darwin ]; then \
+	    echo "  Install Homebrew (https://brew.sh); make then installs the rest itself."; exit 2; \
+	  fi; \
+	  case "$$missing" in *git*) echo "  git:     sudo apt-get install git (Fedora: sudo dnf install git)" ;; esac; \
+	  case "$$missing" in *uv*) echo "  uv:      curl -LsSf https://astral.sh/uv/install.sh | sh" ;; esac; \
+	  case "$$missing" in *poppler*) echo "  poppler: sudo apt-get install poppler-utils (Fedora: sudo dnf install poppler-utils)" ;; esac; \
+	  exit 2; \
+	fi
+
+setup: deps
 	test -x $(PY) || (cd $(TOOL) && uv venv --python 3.12 .venv)
 	uv pip install --python $(PY) -e $(TOOL)[dev]
 	uv pip install --python $(PY) $(MODEL_URL)
 
-dictionary:
+dictionary: deps
 	@test -n "$(PDF)" || (echo "usage: make dictionary PDF=path/to/asd-ste100-issue-9.pdf" && exit 2)
 	$(TOOL)/bin/ste build-dictionary "$(PDF)"
 
 # Download ASD-STE100 Issue 9 from the official ASD-STE100 website for the
 # user's own use (asks first; YES=1 skips the question), then build from it.
 download:
-	@command -v pdftotext >/dev/null || { echo "pdftotext not found: brew install poppler (or apt install poppler-utils)"; exit 2; }
+	@$(MAKE) --no-print-directory deps
 	@echo "ASD-STE100 is copyright ASD (Brussels) and an EU trade mark of ASD. ste-lint is not"
 	@echo "affiliated with ASD. This downloads Issue 9 from the official website"
 	@echo "  $(PDF_URL)"
@@ -49,7 +70,7 @@ doctor:
 install:
 	@set -e; \
 	home() { case "$$1" in "~") echo "$$HOME" ;; "~/"*) echo "$$HOME/$${1#\~/}" ;; *) echo "$$1" ;; esac; }; \
-	command -v uv >/dev/null || { echo "uv not found: brew install uv (or see https://docs.astral.sh/uv/)"; exit 2; }; \
+	$(MAKE) --no-print-directory deps; \
 	src="$$(pwd -P)"; dest="$$(home '$(DEST)')"; pdf=""; \
 	if [ -n '$(PDF)' ]; then \
 	  pdf="$$(home '$(PDF)')"; \
