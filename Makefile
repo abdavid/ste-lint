@@ -66,7 +66,8 @@ doctor:
 	$(TOOL)/bin/ste doctor
 
 # Install (or update) the Claude Code skill at DEST as a clean clone of this
-# checkout, then build its dictionary from PDF, or reuse the one built here.
+# checkout: system tools, virtualenv, then the dictionary from PDF=, from the
+# build in this checkout, or from make download (asks first; YES=1 skips it).
 install:
 	@set -e; \
 	home() { case "$$1" in "~") echo "$$HOME" ;; "~/"*) echo "$$HOME/$${1#\~/}" ;; *) echo "$$1" ;; esac; }; \
@@ -96,14 +97,22 @@ install:
 	  { echo "setup failed; run: make -C $$dest setup"; exit 1; }; \
 	if [ -n "$$pdf" ]; then \
 	  $(MAKE) --no-print-directory -C "$$dest" dictionary PDF="$$pdf"; \
-	elif [ "$$dest" != "$$src" ] && [ ! -f "$$dest/$(DATA)/dictionary.json" ] && [ -f "$(DATA)/dictionary.json" ]; then \
+	elif [ -f "$$dest/$(DATA)/dictionary.json" ] && [ -f "$$dest/$(DATA)/rules.json" ]; then \
+	  echo "Kept the existing dictionary."; \
+	elif [ "$$dest" != "$$src" ] && [ -f "$(DATA)/dictionary.json" ] && [ -f "$(DATA)/rules.json" ]; then \
 	  for f in dictionary.json rules.json build-report.json; do \
 	    if [ -f "$(DATA)/$$f" ]; then cp "$(DATA)/$$f" "$$dest/$(DATA)/"; fi; \
 	  done; \
 	  echo "Reused the dictionary built in this checkout."; \
+	else \
+	  $(MAKE) --no-print-directory -C "$$dest" download YES='$(YES)' || true; \
 	fi; \
 	if "$$dest/tool/bin/ste" doctor >/dev/null; then \
 	  echo "ste-lint is ready: $$dest/tool/bin/ste"; \
+	  echo "Start a new Claude Code session to use the ste-lint skill."; \
+	elif [ -f "$$dest/$(PDF_FILE)" ]; then \
+	  echo "Installed, but the dictionary build failed (see above). After fixing it, run:"; \
+	  echo "  make -C $$dest dictionary PDF=$(PDF_FILE)"; \
 	else \
 	  echo "Installed, but the dictionary is not built yet. Run one of:"; \
 	  echo "  make -C $$dest download            (fetches the PDF from the official ASD-STE100 website)"; \
