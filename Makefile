@@ -15,7 +15,6 @@ deps:
 	@missing=""; \
 	command -v git >/dev/null || missing="$$missing git"; \
 	command -v uv >/dev/null || missing="$$missing uv"; \
-	command -v pdftotext >/dev/null || missing="$$missing poppler"; \
 	if [ -z "$$missing" ]; then exit 0; fi; \
 	if command -v brew >/dev/null; then \
 	  echo "Installing with Homebrew:$$missing"; brew install $$missing; \
@@ -26,7 +25,6 @@ deps:
 	  fi; \
 	  case "$$missing" in *git*) echo "  git:     sudo apt-get install git (Fedora: sudo dnf install git)" ;; esac; \
 	  case "$$missing" in *uv*) echo "  uv:      curl -LsSf https://astral.sh/uv/install.sh | sh" ;; esac; \
-	  case "$$missing" in *poppler*) echo "  poppler: sudo apt-get install poppler-utils (Fedora: sudo dnf install poppler-utils)" ;; esac; \
 	  exit 2; \
 	fi
 
@@ -35,14 +33,14 @@ setup: deps
 	uv pip install --python $(PY) -e $(TOOL)[dev]
 	uv pip install --python $(PY) $(MODEL_URL)
 
-dictionary: deps
+dictionary:
 	@test -n "$(PDF)" || (echo "usage: make dictionary PDF=path/to/asd-ste100-issue-9.pdf" && exit 2)
 	$(TOOL)/bin/ste build-dictionary "$(PDF)"
 
 # Download ASD-STE100 Issue 9 from the official ASD-STE100 website for the
 # user's own use (asks first; YES=1 skips the question), then build from it.
 download:
-	@$(MAKE) --no-print-directory deps
+	@command -v curl >/dev/null || { echo "curl not found; install curl, or download the PDF yourself and run make dictionary PDF=..."; exit 2; }
 	@echo "ASD-STE100 is copyright ASD (Brussels) and an EU trade mark of ASD. ste-lint is not"
 	@echo "affiliated with ASD. This downloads Issue 9 from the official website"
 	@echo "  $(PDF_URL)"

@@ -38,7 +38,7 @@ def test_doctor_happy_path_exits_0(tmp_path, monkeypatch):
     assert r.exit_code == 0
 
 
-def test_doctor_reports_uv_and_pdftotext_informationally(tmp_path, monkeypatch):
+def test_doctor_reports_uv_informationally(tmp_path, monkeypatch):
     dictionary_path = tmp_path / "dictionary.json"
     rules_path = tmp_path / "rules.json"
     dictionary_path.touch()
@@ -50,8 +50,9 @@ def test_doctor_reports_uv_and_pdftotext_informationally(tmp_path, monkeypatch):
     r = runner.invoke(app, ["doctor"])
 
     data = json.loads(r.output)
-    assert data["uv"] is False and data["pdftotext"] is False
-    assert r.exit_code == 0  # missing build tools never fail doctor
+    assert data["uv"] is False
+    assert "pdftotext" not in data
+    assert r.exit_code == 0  # a missing build tool never fails doctor
 
 
 def test_doctor_missing_data_exits_2(tmp_path, monkeypatch):

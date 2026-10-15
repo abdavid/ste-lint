@@ -1,6 +1,6 @@
 import pytest
 
-from ste_lint.extract.rules_text import parse_rules, slice_part1
+from ste_lint.extract.rules_text import page_text, parse_rules, slice_part1
 
 SAMPLE = """Section 1 – Words
 Summary of the rules
@@ -45,3 +45,20 @@ def test_slice_part1_returns_slice_between_anchors():
 def test_slice_part1_raises_when_anchor_missing():
     with pytest.raises(RuntimeError, match="Summary of the rules"):
         slice_part1("no anchors here at all\n")
+
+
+def W(text, x0, top, char_w=5.0, height=10.0):
+    return {"text": text, "x0": x0, "x1": x0 + char_w * len(text), "top": top, "bottom": top + height}
+
+
+def test_page_text_keeps_indentation_column_gaps_and_paragraph_breaks():
+    words = [
+        W("Examples:", 50, 100),
+        W("Active:", 70, 112), W("Open", 140, 112), W("it.", 165, 112),
+        W("Next", 50, 140),
+    ]
+    assert page_text(words) == "Examples:\n    Active:       Open it.\n\nNext"
+
+
+def test_page_text_empty_page():
+    assert page_text([]) == ""

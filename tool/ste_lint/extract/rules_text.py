@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
+import statistics
 from pathlib import Path
 
 from ste_lint import RULES_PATH
@@ -10,6 +10,9 @@ from ste_lint import RULES_PATH
 RULE_HEAD = re.compile(r"^\s*Rule (\d+\.\d+)\s+(.*)$")
 SECTION_HEAD = re.compile(r"^\s*Section \d+ [–-] ")
 FURNITURE = re.compile(r"^\s*(Issue 9|Page 1-|\d{4}-\d{2}-\d{2}|ASD-STE100 Simplified Technical English)")
+START_ANCHOR = "Summary of the rules"
+END_ANCHOR = "Part 2 – Dictionary\n"
+ROW_TOLERANCE = 3.0
 
 
 def parse_rules(text: str) -> dict[str, dict]:
@@ -30,26 +33,65 @@ def parse_rules(text: str) -> dict[str, dict]:
     return rules
 
 
+def _part1_bounds(out: str) -> tuple[int, int]:
+    start = out.find(f"Section 1 – Words\n{START_ANCHOR}")
+    if start < 0:
+        start = out.find(START_ANCHOR)
+    return start, (out.find(END_ANCHOR, start) if start >= 0 else -1)
+
+
 def slice_part1(out: str) -> str:
-    start = out.find("Section 1 – Words\nSummary of the rules")
+    start, end = _part1_bounds(out)
     if start < 0:
-        start = out.find("Summary of the rules")
-    if start < 0:
-        raise RuntimeError("Part 1 'Summary of the rules' anchor not found in PDF text")
-    end = out.find("Part 2 – Dictionary\n", start)
+        raise RuntimeError(f"Part 1 '{START_ANCHOR}' anchor not found in PDF text")
     return out[start:end if end > 0 else None]
 
 
+def page_text(words: list[dict]) -> str:
+    """Lay out pdfplumber words as plain text, keeping indentation, column gaps and blank lines."""
+    if not words:
+        return ""
+    char_w = statistics.median((w["x1"] - w["x0"]) / len(w["text"]) for w in words)
+    left = min(w["x0"] for w in words)
+    rows: list[list] = []  # [top, bottom, words]
+    for w in sorted(words, key=lambda w: (w["top"], w["x0"])):
+        if rows and abs(rows[-1][0] - w["top"]) <= ROW_TOLERANCE:
+            rows[-1][1] = max(rows[-1][1], w["bottom"])
+            rows[-1][2].append(w)
+        else:
+            rows.append([w["top"], w["bottom"], [w]])
+    lines: list[str] = []
+    prev_bottom = None
+    for top, bottom, row in rows:
+        if prev_bottom is not None and top - prev_bottom > 0.9 * (bottom - top):
+            lines.append("")
+        line, prev_x1 = "", 0.0
+        for w in sorted(row, key=lambda w: w["x0"]):
+            col = round((w["x0"] - left) / char_w)
+            if line and w["x0"] - prev_x1 < 2 * char_w:
+                line += " "
+            elif len(line) < col:
+                line = line.ljust(col)
+            elif line:
+                line += " "
+            line += w["text"]
+            prev_x1 = w["x1"]
+        lines.append(line.rstrip())
+        prev_bottom = bottom
+    return "\n".join(lines)
+
+
 def extract_part1_text(pdf: Path) -> str:
-    try:
-        result = subprocess.run(
-            ["pdftotext", "-layout", str(pdf), "-"], check=True, capture_output=True, text=True
-        )
-    except FileNotFoundError as e:
-        raise RuntimeError("pdftotext not found — install poppler") from e
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"pdftotext failed: {e.stderr}") from e
-    return slice_part1(result.stdout)
+    import pdfplumber
+
+    pages: list[str] = []
+    with pdfplumber.open(pdf) as doc:
+        for page in doc.pages:
+            pages.append(page_text(page.extract_words(x_tolerance=1.5, y_tolerance=2)))
+            text = "\f".join(pages)
+            if _part1_bounds(text)[1] > 0:
+                break
+    return slice_part1(text)
 
 
 def build_rules(pdf: Path, out_path: Path = RULES_PATH) -> int:

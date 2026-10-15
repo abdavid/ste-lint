@@ -48,10 +48,9 @@ def doctor():
         "dictionary": dict_path.exists(),
         "dictionary_path": str(dict_path),
         "rules": RULES_PATH.exists(),
-        # Informational only: needed for `make setup` / `build-dictionary`,
-        # not for linting, so they never affect the exit code.
+        # Informational only: needed for `make setup`, not for linting, so it
+        # never affects the exit code.
         "uv": shutil.which("uv") is not None,
-        "pdftotext": shutil.which("pdftotext") is not None,
     }
     typer.echo(json.dumps(report, indent=2))
     required = ("spacy_model", "dictionary", "rules")

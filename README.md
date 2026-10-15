@@ -18,23 +18,21 @@ mechanically-checkable STE writing rules, and it doubles as a Claude Code skill 
   Makefile assumes a POSIX shell (WSL should work but is untested).
 - [`uv`](https://docs.astral.sh/uv/) to create the virtualenv and install the package
   (it also fetches Python 3.12 when needed).
-- `pdftotext` from poppler, used by `make dictionary` / `make download` to read the PDF.
 - Your own copy of the ASD-STE100 Issue 9 PDF from the official source. Either register
   through ASD's free
   [download form](https://www.asd-europe.org/standards-specifications/simplified-technical-english/download-asd-ste-100)
   (preferred: it tells ASD how STE is used), or run `make download`, which fetches it
   from the official ASD-STE100 website. Do not use copies from mirror sites.
 
-`make install`, `make setup`, `make dictionary` and `make download` first run
-`make deps`, which checks for `git`, `uv` and `pdftotext`. With Homebrew (macOS, or
-Linux with Homebrew) it installs the missing ones (`brew install uv poppler`). Without
-Homebrew it prints the commands for your system (for example
-`sudo apt-get install poppler-utils`) and stops: it never runs `sudo` or an install
-script for you. The Python packages and the spaCy model are installed into the
-project's own virtualenv by `make setup`.
+`make install` and `make setup` first run `make deps`, which checks for `git` and `uv`.
+With Homebrew (macOS, or Linux with Homebrew) it installs the missing ones
+(`brew install uv`). Without Homebrew it prints the commands for your system and stops:
+it never runs `sudo` or an install script for you. Everything else, including the PDF
+reader (pdfplumber) and the spaCy model, is installed into the project's own
+virtualenv by `make setup`; no other system packages are needed.
 
-`make doctor` reports `uv` and `pdftotext` as booleans; they are informational only and
-do not affect its exit code (linting needs neither once the dictionary is built).
+`make doctor` reports `uv` as a boolean; it is informational only and does not affect
+the exit code (linting does not need it once the virtualenv exists).
 
 ## Install as a Claude Code skill
 
@@ -46,8 +44,7 @@ make install
 
 That one command does everything needed:
 
-1. `make deps`: installs missing `git`, `uv` and `pdftotext` (with Homebrew; see
-   Prerequisites).
+1. `make deps`: installs missing `git` and `uv` (with Homebrew; see Prerequisites).
 2. Clones this checkout to `~/.claude/skills/ste-lint` (pass `DEST=...` for another
    directory), or updates that clone if it is already there.
 3. `make setup` in the clone: virtualenv, Python packages, spaCy model.
@@ -90,8 +87,7 @@ make doctor
 #   "dictionary": true,
 #   "dictionary_path": "/path/to/ste-lint/tool/ste_lint/data/dictionary.json",
 #   "rules": true,
-#   "uv": true,
-#   "pdftotext": true
+#   "uv": true
 # }
 
 # 4. Run the test suite.
