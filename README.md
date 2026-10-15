@@ -20,10 +20,11 @@ mechanically-checkable STE writing rules, and it doubles as a Claude Code skill 
   `curl -LsSf https://astral.sh/uv/install.sh | sh` (or `brew install uv`).
 - `pdftotext` from poppler, used once by `make dictionary` to read the PDF:
   `brew install poppler` on macOS, `apt install poppler-utils` on Debian/Ubuntu.
-- Your own copy of the ASD-STE100 Issue 9 PDF, downloaded from the official source
-  ([asd-ste100.org](https://www.asd-ste100.org) or
-  [asd-europe.org](https://www.asd-europe.org/standards-specifications/simplified-technical-english/download-asd-ste-100);
-  free, with a short registration form). Do not use copies from mirror sites.
+- Your own copy of the ASD-STE100 Issue 9 PDF from the official source. Either register
+  through ASD's free
+  [download form](https://www.asd-europe.org/standards-specifications/simplified-technical-english/download-asd-ste-100)
+  (preferred: it tells ASD how STE is used), or run `make download`, which fetches it
+  from the official ASD-STE100 website. Do not use copies from mirror sites.
 
 `make doctor` reports `uv` and `pdftotext` as booleans; they are informational only and
 do not affect its exit code (linting needs neither once the dictionary is built).
@@ -35,6 +36,8 @@ git clone https://github.com/abdavid/ste-lint.git
 cd ste-lint
 make install PDF=~/Downloads/asd-ste100-issue-9.pdf
 ```
+
+No PDF yet? Run `make install`, then `make -C ~/.claude/skills/ste-lint download`.
 
 `make install` puts a clean clone of this checkout at `~/.claude/skills/ste-lint` (pass
 `DEST=...` to choose another directory), creates its virtualenv, downloads the spaCy
@@ -58,8 +61,10 @@ not be shared (see [Legal](#legal)).
 # 1. Create the virtualenv, install the package, and download the spaCy model.
 make setup
 
-# 2. Build the dictionary and rules from your own ASD-STE100 Issue 9 PDF.
+# 2. Build the dictionary and rules from your own ASD-STE100 Issue 9 PDF...
 make dictionary PDF=~/Downloads/asd-ste100-issue-9.pdf
+#    ...or download it from the official ASD-STE100 website and build from that.
+make download            # asks first; YES=1 skips the question
 
 # 3. Confirm everything is wired up.
 make doctor
@@ -269,8 +274,12 @@ licence covers this project's own work only and grants no rights in ASD-STE100.
 - **Copyright.** The ASD-STE100 specification, including its rules, dictionary and
   examples, is copyright ASD. This repository does not contain it. Rule numbers and the
   short rule summaries in this repository are the project's own wording.
+- **Downloading.** `make download` fetches the PDF from ASD's own website
+  (`asd-ste100.org`) to your machine, for your own use, after you confirm. ste-lint
+  never downloads from anywhere else and never uploads anything.
 - **Your data stays yours.** `make dictionary` builds `tool/ste_lint/data/dictionary.json`
-  and `rules.json` from the PDF you provide. Those files contain ASD material: keep them
+  and `rules.json` from the PDF (kept, gitignored, at `tool/ste_lint/data/asd-ste100-issue-9.pdf` by
+  `make download`). The PDF and those files contain ASD material: keep them
   local, do not commit them, and do not share or publish them (for example in a bundle,
   a package, a shared network path, or a CI cache). Each user builds their own.
 - **No compliance claim.** The linter is an aid for writers who know ASD-STE100. It

@@ -4,8 +4,10 @@ PY := $(VENV)/bin/python
 DATA := $(TOOL)/ste_lint/data
 MODEL_URL := https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 DEST ?= $(HOME)/.claude/skills/ste-lint
+PDF_URL := https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf
+PDF_FILE := $(DATA)/asd-ste100-issue-9.pdf
 
-.PHONY: setup dictionary test doctor install
+.PHONY: setup dictionary download test doctor install
 
 setup:
 	test -x $(PY) || (cd $(TOOL) && uv venv --python 3.12 .venv)
@@ -15,6 +17,26 @@ setup:
 dictionary:
 	@test -n "$(PDF)" || (echo "usage: make dictionary PDF=path/to/asd-ste100-issue-9.pdf" && exit 2)
 	$(TOOL)/bin/ste build-dictionary "$(PDF)"
+
+# Download ASD-STE100 Issue 9 from the official ASD-STE100 website for the
+# user's own use (asks first; YES=1 skips the question), then build from it.
+download:
+	@command -v pdftotext >/dev/null || { echo "pdftotext not found: brew install poppler (or apt install poppler-utils)"; exit 2; }
+	@echo "ASD-STE100 is copyright ASD (Brussels) and an EU trade mark of ASD. ste-lint is not"
+	@echo "affiliated with ASD. This downloads Issue 9 from the official website"
+	@echo "  $(PDF_URL)"
+	@echo "for your own use. Do not share the PDF or the files built from it. ASD prefers that"
+	@echo "you register through its free download form, which tells it how STE is used:"
+	@echo "  https://www.asd-europe.org/standards-specifications/simplified-technical-english/download-asd-ste-100"
+	@if [ "$(YES)" != 1 ]; then \
+	  printf 'Download it now? [y/N] '; read answer || answer=; \
+	  case "$$answer" in y|Y|yes|Yes) ;; *) echo "Cancelled (pass YES=1 to skip the question)."; exit 1 ;; esac; \
+	fi
+	curl -fL --proto '=https' --tlsv1.2 --progress-bar -o "$(PDF_FILE).part" "$(PDF_URL)"
+	@test "$$(head -c 5 "$(PDF_FILE).part")" = "%PDF-" || { rm -f "$(PDF_FILE).part"; echo "The download is not a PDF."; exit 2; }
+	@mv "$(PDF_FILE).part" "$(PDF_FILE)"
+	@echo "Saved $(PDF_FILE) (gitignored)."
+	$(MAKE) --no-print-directory dictionary PDF="$(PDF_FILE)"
 
 test:
 	cd $(TOOL) && .venv/bin/pytest -q
@@ -62,7 +84,7 @@ install:
 	if "$$dest/tool/bin/ste" doctor >/dev/null; then \
 	  echo "ste-lint is ready: $$dest/tool/bin/ste"; \
 	else \
-	  echo "Installed, but the dictionary is not built yet. Download ASD-STE100 Issue 9 from"; \
-	  echo "https://www.asd-ste100.org (free registration), then run:"; \
+	  echo "Installed, but the dictionary is not built yet. Run one of:"; \
+	  echo "  make -C $$dest download            (fetches the PDF from the official ASD-STE100 website)"; \
 	  echo "  make -C $$dest dictionary PDF=path/to/asd-ste100-issue-9.pdf"; \
 	fi

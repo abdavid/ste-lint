@@ -15,10 +15,13 @@ CLI: `~/.claude/skills/ste-lint/tool/bin/ste` (alias below as `ste`).
 ```bash
 ste doctor
 ```
-If `dictionary` or `rules` is false: tell the user to run
-`make -C ~/.claude/skills/ste-lint dictionary PDF=<path to asd-ste100-issue-9.pdf>` and stop.
-The PDF is copyright ASD; never try to download it or fetch it from a mirror. The user gets
-their own copy from the official source (see the README).
+If `dictionary` or `rules` is false, stop and tell the user they can either:
+- build from their own PDF: `make -C ~/.claude/skills/ste-lint dictionary PDF=<path>`, or
+- download it from the official ASD-STE100 website: `make -C ~/.claude/skills/ste-lint download`.
+
+The PDF is copyright ASD. Run `download` only after the user agrees to it in this
+conversation, and then with `YES=1` (it cannot prompt you). Never fetch the PDF any other
+way or from any other site.
 
 ## Commands you will use
 

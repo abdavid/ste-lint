@@ -22,8 +22,10 @@ This repository does not contain the ASD-STE100 specification, its dictionary,
 its rule text or its examples. Each user must get their own copy of the
 specification from an official source (https://www.asd-ste100.org or
 https://www.asd-europe.org) and build the local data files with
-`make dictionary`. The built files (tool/ste_lint/data/dictionary.json and
-rules.json) contain ASD material. Do not commit, publish or redistribute them.
+`make dictionary`. `make download` fetches the PDF from the official
+ASD-STE100 website, for the user's own use, after the user confirms. The PDF
+and the built files (tool/ste_lint/data/dictionary.json and rules.json)
+contain ASD material. Do not commit, publish or redistribute them.
 
 No compliance claim
 -------------------
