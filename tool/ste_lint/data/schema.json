@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["issue", "built", "source_sha256", "entries"],
+  "properties": {
+    "issue": {"type": "string"},
+    "built": {"type": "string"},
+    "source_sha256": {"type": "string"},
+    "notice": {"type": "string"},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "word", "pos", "approved", "forms", "no_other_forms", "meaning", "alternatives", "examples"],
+        "properties": {
+          "id": {"type": "string"},
+          "word": {"type": "string"},
+          "pos": {"enum": ["n", "v", "adj", "adv", "prep", "conj", "pron", "art", "TN", "TV"]},
+          "approved": {"type": "boolean"},
+          "forms": {"type": "array", "items": {"type": "string"}},
+          "no_other_forms": {"type": "boolean"},
+          "meaning": {"type": "string"},
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["word"],
+              "properties": {
+                "word": {"type": "string"},
+                "pos": {"type": ["string", "null"]},
+                "examples": {"$ref": "#/$defs/examples"}
+              }
+            }
+          },
+          "examples": {"$ref": "#/$defs/examples"},
+          "page": {"type": "integer"},
+          "notes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "examples": {
+      "type": "object",
+      "required": ["ste", "non_ste"],
+      "properties": {
+        "ste": {"type": "array", "items": {"type": "string"}},
+        "non_ste": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

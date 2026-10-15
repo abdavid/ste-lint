@@ -1,0 +1,39 @@
+ste-lint
+Copyright (c) 2026 David Børresen. Licensed under the MIT License (see LICENSE).
+
+The MIT License covers the source code and documentation in this repository only.
+It grants no rights in ASD-STE100 or in any data built from it.
+
+ASD-STE100 and Simplified Technical English
+-------------------------------------------
+ASD-STE100 Simplified Technical English is a specification published by the
+Aerospace, Security and Defence Industries Association of Europe (ASD),
+Brussels, Belgium. The specification, including its writing rules, dictionary
+and examples, is copyright (c) ASD. "ASD-STE100" is a European Union registered
+trade mark of ASD (EU Trade Mark No. 017966390).
+
+This project is independent. It is not affiliated with, endorsed by, sponsored
+by, certified by, or otherwise connected to ASD or the Simplified Technical
+English Maintenance Group (STEMG). The names "ASD-STE100" and "Simplified
+Technical English" are used only to identify the specification that this tool
+checks text against.
+
+This repository does not contain the ASD-STE100 specification, its dictionary,
+its rule text or its examples. Each user must get their own copy of the
+specification from an official source (https://www.asd-ste100.org or
+https://www.asd-europe.org) and build the local data files with
+`make dictionary`. The built files (tool/ste_lint/data/dictionary.json and
+rules.json) contain ASD material. Do not commit, publish or redistribute them.
+
+No compliance claim
+-------------------
+ste-lint is an aid for writers who already know ASD-STE100. A clean result
+does not mean that a text complies with ASD-STE100, and the tool does not
+check every rule. Rule numbers and short rule summaries in this repository are
+written by the project to identify rules; they are not the official rule text.
+
+Third-party software
+--------------------
+ste-lint depends on spaCy and its en_core_web_sm model, pdfplumber, Typer,
+Rich and PyYAML. These are installed from their own distribution channels at
+setup time under their own licences; none of them is bundled here.

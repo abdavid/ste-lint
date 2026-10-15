@@ -1,0 +1,9 @@
+tool/.venv/
+tool/ste_lint/data/dictionary.json
+tool/ste_lint/data/rules.json
+tool/ste_lint/data/build-report.json
+.ste-lint-cache/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.idea/
