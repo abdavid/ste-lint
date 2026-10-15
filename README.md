@@ -13,6 +13,7 @@ mechanically-checkable STE writing rules, and it doubles as a Claude Code skill 
 
 ## Prerequisites
 
+- `git` and `make` (on macOS: `xcode-select --install`).
 - macOS or Linux. Windows is not supported: `tool/bin/ste` is a bash wrapper and the
   Makefile assumes a POSIX shell (WSL should work but is untested).
 - [`uv`](https://docs.astral.sh/uv/) to create the virtualenv and install the package:
@@ -27,7 +28,26 @@ mechanically-checkable STE writing rules, and it doubles as a Claude Code skill 
 `make doctor` reports `uv` and `pdftotext` as booleans; they are informational only and
 do not affect its exit code (linting needs neither once the dictionary is built).
 
-## Setup
+## Install as a Claude Code skill
+
+```bash
+git clone https://github.com/abdavid/ste-lint.git
+cd ste-lint
+make install PDF=~/Downloads/asd-ste100-issue-9.pdf
+```
+
+`make install` puts a clean clone of this checkout at `~/.claude/skills/ste-lint` (pass
+`DEST=...` to choose another directory), creates its virtualenv, downloads the spaCy
+model, and builds the dictionary from your PDF. Without `PDF=`, it reuses a dictionary
+already built in this checkout, or tells you how to build one later. Claude Code picks
+up the skill in new sessions.
+
+Run `make install` again to update: it pulls the installed clone (`git pull --ff-only`)
+and refreshes its dependencies. An existing dictionary is kept.
+
+## Development setup
+
+To work on ste-lint itself in this checkout:
 
 The ASD-STE100 dictionary and rule text are copyright ASD and are **not** included in
 this repository (`tool/ste_lint/data/dictionary.json` and `rules.json` are gitignored).
